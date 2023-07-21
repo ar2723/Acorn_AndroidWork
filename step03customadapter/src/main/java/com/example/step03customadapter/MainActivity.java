@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 "미국", "어쩌구.. 저쩌구.."));
         // listView에 연결할 어댑터 객체 생성
         CountryAdapter adapter =  new CountryAdapter(this, R.layout.listview_cell, countries);
-
         //ListView의 참조값 얻어와서
         ListView listView = findViewById(R.id.listView);
         //어댑터 연결하기 (BaseAdapter로 인식하기 때문에 인자로 전달할 수 있음)
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         //DetailActivity로 이동할 Intent 객체 생성하기
         Intent intent = new Intent(this, DetailActivity.class);
 
-        //Intent 객체에 "dto" 라는 키값으로 Serializable type 인 CountryDto 객체의 참조값 전달하기
+        //Intent 객체에 "dto" 라는 키값으로 Serializable type(빈 인터페이스)인 CountryDto 객체의 참조값 전달하기
         intent.putExtra("dto", countries.get(i));
 
         //startActivity() 메소드 호출하면서 Intent 객체를 전달해서 액티비티 시작시키기
