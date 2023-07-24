@@ -47,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
                 //정상적으로 연결이 되었다면
                 if(conn != null){
                     conn.setConnectTimeout(20000); //응답을 기다리는 최대 대기 시간
-                    conn.setRequestMethod("GET");// 요청 메소드 설정 (Default 는 GET)
-                    conn.setUseCaches(false);//케쉬 사용 여부
+                    conn.setRequestMethod("GET"); // 요청 메소드 설정 (Default 는 GET)
+                    conn.setUseCaches(false); //케쉬 사용 여부
                     //응답 코드를 읽어온다.
                     int responseCode=conn.getResponseCode();
                     if(responseCode == HttpURLConnection.HTTP_OK){ //정상 응답이라면
