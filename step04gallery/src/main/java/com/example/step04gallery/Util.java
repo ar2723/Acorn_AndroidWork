@@ -1,4 +1,4 @@
-package com.example.step04httprequest2;
+package com.example.step04gallery;
 
 import android.os.AsyncTask;
 
@@ -21,7 +21,7 @@ public class Util {
         public void onFail(int requestId, Map<String, Object> result);
     }
     /*
-        1. 사용할때 RequestListener 인터페이스 Type을 전달한다.
+        1. 사용할때 RequestListener 인터페이스 Type 을 전달한다.
         2. 결과는 RequestListener 객체에 전달된다.
         3. Map<String,Object>  에서 응답 코드는
             "code" 라는 키값으로 200, 404, 500, -1 중에 하나가 리턴되고

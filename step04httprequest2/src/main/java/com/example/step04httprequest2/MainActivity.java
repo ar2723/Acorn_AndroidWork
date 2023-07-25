@@ -20,7 +20,6 @@ public class MainActivity extends AppCompatActivity implements Util.RequestListe
         EditText inputUrl = findViewById(R.id.inputUrl);
         Button requestBtn = findViewById(R.id.requestBtn);
         requestBtn.setOnClickListener(view->{
-            //1. 입력한 url 주소를 읽어와서
             String url = inputUrl.getText().toString();
             Util.sendGetRequest(999, url, null, this);
         });

@@ -108,7 +108,8 @@ public class MainActivity extends AppCompatActivity implements Util.RequestListe
             // 서버가 응답한 문자열
             String data = (String)result.get("data");
             try {
-                //data 는 [] 형식의 json 문자열이다.  [] 형식의 json 문자열은 JSONArray 객체를 활용한다.
+                //data 는 [..., ..., ...] 형식의 json 문자열이다.
+                // [] 형식의 json 문자열은 JSONArray 객체를 활용한다.
                 JSONArray arr =  new JSONArray(data);
                 //반복문 돌면서
                 for(int i=0; i<arr.length(); i++){
@@ -121,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements Util.RequestListe
                 editText.setText(e.getMessage());
             }
         } else if (requestId == 3) {
-            // data는 [{}, {}, {} ... ] 형식의 json 문자열이다.
+            // data는 [{}, {}, {}, ... ] 형식의 json 문자열이다.
             String data = (String)result.get("data");
             // [] 형식의 문자열이기 때문에 JSONArray 객체를 생성한다.
             try {
@@ -143,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements Util.RequestListe
             }
         }
     }
-
     @Override
     public void onFail(int requestId, Map<String, Object> result) {
         if(requestId == 0){
