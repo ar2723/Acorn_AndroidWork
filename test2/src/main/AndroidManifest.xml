@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 인터넷을 사용하겠다는 허가 얻기 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
@@ -10,9 +9,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Hello"
         android:usesCleartextTraffic="true">
-        <activity
-            android:name=".DetailActivity"
-            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

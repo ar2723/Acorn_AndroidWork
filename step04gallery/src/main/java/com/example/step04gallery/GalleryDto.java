@@ -9,7 +9,7 @@ public class GalleryDto implements Serializable {
     private String imagePath;
     private String regdate;
 
-    public GalleryDto(){};
+    public GalleryDto(){}
 
     public GalleryDto(int num, String writer, String caption, String imagePath, String regdate) {
         this.num = num;
