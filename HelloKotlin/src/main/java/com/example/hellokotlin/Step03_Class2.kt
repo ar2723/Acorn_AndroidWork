@@ -16,6 +16,8 @@ class Person constructor(name:String){
 //var은 수정이 가능한 필드가 만들어지고, val은 수정이 불가능한 필드가 만들어진다.
 class Person(var name:String)
 
+// data 라는 예약어를 붙여주면, 이 객체에 참조값을 콘솔창에 찍으면
+// 데이터에 어떤 값이 저장되어 있는지 쉽게 확인할 수 있다.
 data class Member(var num:Int, var name:String, var addr:String)
 
 fun main(){
@@ -29,8 +31,8 @@ fun main(){
     println(m1)
 
     // in Java : List<Member> members
-    // members 라는 변수를 상수화 시킨다는 것은 members 의 참조값을 변경하는 것은 불가능 하다는 것을 말한다.
-    //
+    // members 라는 변수를 상수화 시킨다는 것은
+    // members의 참조값을 변경하는 것이 불가능 하다는 것을 말한다.
     val members: MutableList<Member> = mutableListOf<Member>()
 
     //type 추론이 가능하기 때문에 members12의 type 생략 가능

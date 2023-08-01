@@ -12,7 +12,7 @@ public class DBhelper extends SQLiteOpenHelper {
                     @Nullable SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
-    //App에서 DB를 처름 사용할 때 호출되는 메소드
+    //App에서 DB를 처음 사용할 때 호출되는 메소드
     @Override
     public void onCreate(SQLiteDatabase db) {
         //사용할 테이블을 만들면 된다.
@@ -23,6 +23,7 @@ public class DBhelper extends SQLiteOpenHelper {
         db.execSQL(sql);
     }
 
+    //DBHelper 객체를 생성할때 version 숫자가 올라가면 (변경되면) 호출되는 메소드
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
         //업그레이드할 내용을 작성하면 된다.

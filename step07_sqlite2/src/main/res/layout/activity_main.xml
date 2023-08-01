@@ -6,20 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:orientation="vertical">
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:id="@+id/listView"/>
+
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="할일 입력..."
-        android:id="@+id/inputText"/>
-
+        android:id="@+id/inputMsg"/>
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="추가"
-        android:id="@+id/addBtn"/>
+        android:text="전송"
+        android:id="@+id/sendBtn"/>
 </LinearLayout>
