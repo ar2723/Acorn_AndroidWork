@@ -55,6 +55,8 @@ class GameView @JvmOverloads constructor(
     var ran = Random()
     // 적기가 만들어 진 이후 count를 셀 필드 (적기가 겹쳐서 만들어지지 않게 하기 위해)
     var postCount = 0
+    //SoundManager 객체의 참족밧을 저장할 필드
+    var sManager:SoundManager? = null
 
     //게임 화면을 준비하는 함수
     fun init() {
@@ -143,12 +145,31 @@ class GameView @JvmOverloads constructor(
         enemyList.forEach {
             // it 즉 Enemy 객체의 참조값을 tmp에 대입해서 사용
             var tmp = it
-            enemyImgs[tmp.type][tmp.imageIndex]?.let {
-                canvas?.drawBitmap(it,
-                    (tmp.x - unitSize/2).toFloat(),
-                    (tmp.y - unitSize/2).toFloat(),
-                    null
-                )
+            if(tmp.isFall){ //만일 현재 추락 중이라면
+                enemyImgs[tmp.type][tmp.imageIndex]?.let {
+                    //canvas의 정상 상태를 ( 변화를 가하지 않은 상태 ) 저장한다.
+                    canvas?.save()
+                    //canvas의 좌표계를 적기의 위치로 평행이동
+                    canvas?.translate(tmp.x.toFloat(), tmp.y.toFloat())
+                    //canvas의 좌표계를 적기의 회전량 만큼 회전
+                    canvas?.rotate(tmp.angle.toFloat())
+                    //적기를 원점(0, 0)에 그리고
+                    val scaled = Bitmap.createScaledBitmap(it, tmp.size, tmp.size, false)
+                    canvas?.drawBitmap(scaled,
+                        (0 - unitSize/2).toFloat(),
+                        (0 - unitSize/2).toFloat(),
+                        null)
+                    //저장했던 정상상태로 되돌린다.
+                    canvas?.restore()
+                }
+            }else {
+                enemyImgs[tmp.type][tmp.imageIndex]?.let {
+                    canvas?.drawBitmap(it,
+                        (tmp.x - unitSize/2).toFloat(),
+                        (tmp.y - unitSize/2).toFloat(),
+                        null
+                    )
+                }
             }
         }
 
@@ -182,11 +203,58 @@ class GameView @JvmOverloads constructor(
         }
         //미사일 관련 처리를 하는 함수 호출
         missileService()
-        // 적기 관련 처리를 하는 함수
+        // 적기 관련 처리를 하는 함수 호출
         enemyService()
+        // 적기와 미사일 충돌을 검사하는 함수 호출
+        checkStrike()
     }
+
+    //적기와 미사일 충돌 검사
+    fun checkStrike(){
+        for(i in missList.indices){
+            //i번째 미사일 객체
+            val m = missList.get(i)
+            for(j in enemyList.indices){
+                // j번째 적기 객체
+                val e = enemyList.get(j)
+                // i번째 미사일이 j번째 적기의 4각형 영역 안에 있는지 여부
+                val isStrike = m.x > e.x - unitSize/2 &&
+                               m.x < e.x + unitSize/2 &&
+                               m.y > e.y - unitSize/2 &&
+                               m.y < e.y + unitSize/2
+
+                if(isStrike && !e.isFall){ // 현재 추락중인 적기는 제외한다.
+                    //효과음 재생
+                    sManager?.playSound(GameActivity.SOUND_SHOOT)
+                    //적기 에너지를 줄이고
+                    e.energy -= 20
+                    //미사일을 제거하고
+                    m.isDead = true
+                    //만일 적기의 에너지가 0이하라면 적기가 추락하도록 한다.
+                    if(e.energy <= 0){
+                        //바로 제거 되는 대신 적기가 추락 상태가 되도록 한다.
+                        e.isFall = true
+                    }
+                }
+            }
+        }
+    }
+
+
     // 적기 관련 처리를 하는 함수
     fun enemyService(){
+        if(count%10 == 0){
+            //반복문 돌면서
+            for(tmp in enemyList){
+                // 모든 적기의 이미지 인덱스를 1증가시킨다
+                tmp.imageIndex++
+                // 만일 존재하지 않는 인덱스라면
+                if(tmp.imageIndex == 2){
+                    // 다시 처음 인덱스로 되돌리기
+                    tmp.imageIndex = 0
+                }
+            }
+        }
         postCount++
         //랜덤한 숫자를 하나 얻어낸다 (0~19 사이)
         val ranNum = ran.nextInt(20)
@@ -196,11 +264,41 @@ class GameView @JvmOverloads constructor(
             for(i in 0 until 5){
                 val tmp = Enemy()
                 tmp.x = enemyX[i]
-                tmp.y=unitSize/2 // 임시 y 좌표
+                tmp.y = -unitSize/2 // 임시 y 좌표
                 tmp.type = ran.nextInt(2) // 적기의 type은 0 또는 1 랜덤하게 부여
                 tmp.energy = if(tmp.type==0){ 50 } else { 100 }
+                tmp.imageIndex = ran.nextInt(2) // 최초 이미지 인덱스도 랜덤하게 부여
+                tmp.size = unitSize // 적기의 초기 크기 부여(추락할때는 줄이기 위해)
                 // 만든 적기를 List에 누적시키기
                 enemyList.add(tmp)
+            }
+        }
+        //적기 움직이기
+        for(tmp in enemyList){
+            if(tmp.isFall){
+                //크기를 줄이고
+                tmp.size--
+                //회전값을 증가
+                tmp.angle += 10
+                //만일 크기가 0보다 작아지면 ( 완전히 추락한 경우 )
+                if(tmp.size <= 0){
+                    tmp.isDead = true // 적기 객체를 제거하도록 표시한다.
+                }
+            } else {
+                //적기의 y 좌표를 증가 시킨다
+                tmp.y += missSpeed/2
+            }
+            if(tmp.y > height + unitSize/2){
+                //배열에서 제거될 수 있도록 일단 표시해놓는다.
+                tmp.isDead = true
+            }
+        }
+        //적기를 체크해서 배열에서 제거할 적기는 제거하기
+        for(i in enemyList.lastIndex downTo 0){
+            // i번째 인덱스의 적기를 제거해야 한다면
+            if(enemyList[i].isDead){
+                // i번째 인덱스의 적기를 제거한다.
+                enemyList.removeAt(i)
             }
         }
     }
@@ -218,14 +316,15 @@ class GameView @JvmOverloads constructor(
         for(tmp in missList){
             //미사일의 속도만큼 y좌표를 감소시킨다.
             tmp.y -= missSpeed
+            //위쪽으로 화면을 벗어난 미사일이 제거 될 수 있도록
+            if(tmp.y < -missSize/2){
+                tmp.isDead = true
+            }
         }
         //위쪽 밖으로 화면을 벗어난 미사일 제거
         for(i in missList.lastIndex downTo 0){
-            missList[i]?.let {
-                //List에서 해당 인덱스 제거하기
-                if(it.y < -missSize/2){
-                    missList.removeAt(i)
-                }
+            if(missList.get(i).isDead){
+                missList.removeAt(i)
             }
         }
     }
