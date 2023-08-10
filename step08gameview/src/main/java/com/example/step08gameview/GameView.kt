@@ -4,11 +4,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.os.Handler
 import android.os.Message
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Button
+import androidx.core.view.isVisible
 import java.util.Random
 
 
@@ -57,9 +61,26 @@ class GameView @JvmOverloads constructor(
     var postCount = 0
     //SoundManager 객체의 참족밧을 저장할 필드
     var sManager:SoundManager? = null
+    //점수를 누적할 필드
+    var point = 0
+    //GameOver 버튼의 참조값을 저장할 필드
+    var overBtn: Button? = null
+    //운석 이미지를 저장할 필드
+    lateinit var unsukImg:Bitmap
+    //운석의 x, y 좌표
+    var unsukX = 0
+    var unsukY = 0
+    //운석이 날아오고 있는지 여부
+    var isUnsuk = false
+
 
     //게임 화면을 준비하는 함수
     fun init() {
+        //운석 이미지를 로딩해서
+        var unsukImg = BitmapFactory.decodeResource(resources, R.drawable.unsuk)
+        //크기를 조절 후 필드에 저장해둔다.
+        this.unsukImg = Bitmap.createScaledBitmap(unsukImg, unitSize, unitSize, false)
+
         //사용할 이미지를 미리 로딩해서 참조값을 필드에 저장하기
         //원본 이미지
         var backImg:Bitmap = BitmapFactory.decodeResource(resources, R.drawable.backbg)
@@ -130,7 +151,6 @@ class GameView @JvmOverloads constructor(
                     null
                 )
             }
-
         }
 
         //드래곤 이미지 그리기
@@ -173,6 +193,21 @@ class GameView @JvmOverloads constructor(
             }
         }
 
+        //만일 운석이 진행중이면 운석을 그린다
+        if(isUnsuk){
+            canvas?.drawBitmap(unsukImg,
+                unsukX-unitSize/2.toFloat(),
+                unsukY-unitSize/2.toFloat(),
+                null)
+        }
+
+        //글자를 출력하기 위한 Paint 객체
+        val textP = Paint()
+        textP.color = Color.RED
+        textP.textSize = 50f
+        //점수 출력 (좌 하단의 좌표를 지정해서 출력)
+        canvas?.drawText("Point : $point", 10f, 60f, textP)
+
         //카운트 값을 올린다
         count++
         //만일 conunt를 10으로 나눈 나머지 값이 0이라면
@@ -207,10 +242,64 @@ class GameView @JvmOverloads constructor(
         enemyService()
         // 적기와 미사일 충돌을 검사하는 함수 호출
         checkStrike()
+        unsukService()
     }
 
-    //적기와 미사일 충돌 검사
+    //운석 관련 처리를 하는 함수
+    fun unsukService(){
+        // 0 ~ 499 사이의 랜덤한 숫자를 얻어내서
+        val ranNum = ran.nextInt(500)
+        // 우연히 100이 나왔을 때 운석을 진행시킨다.
+        if(ranNum == 100 && !isUnsuk){
+            //드래곤의 x 좌표와 같은 선상에서 진행되도록
+            unsukX = dragonX
+            unsukY = -unitSize/2
+            //운석이 진행중이라고 표시한다.
+            isUnsuk = true
+        }
+        //만일 운석 진행 중이 아니면 함수를 여기서 종료한다.
+        if(!isUnsuk)return
+        //미사일 속도의 2/3 속도로 진행
+        unsukY += missSpeed*2/3
+        if(unsukY > height+unitSize/2){ //아래쪽으로 완전히 진행했다면
+            //운석 진행 여부를 false로 바꿔준다
+            isUnsuk = false
+        }
+        //운석과 드래곤 충돌 검사
+        val isStrike = unsukX > dragonX - unitSize/2 &&
+                       unsukX < dragonX + unitSize/2 &&
+                       unsukY > dragonY - unitSize/2 &&
+                       unsukY < dragonY + unitSize/2
+        if(isStrike){
+            //Handler 객체에 메세지를 제거하는 메소드를 호출해서 Handler를 멈추게 한다.
+            handler2.removeMessages(0)
+            //효과음 재생
+            sManager?.playSound(GameActivity.SOUND_DIE)
+            //GameOver 버튼이 보이도록 한다.
+            overBtn?.isVisible = true
+        }
+    }
+
+    //드래곤의 충돌 검사 및 적기와 미사일 충돌 검사 하기
     fun checkStrike(){
+        //적기와 드래곤의 충돌 검사 (적기의 좌표가 드래곤의 영역에 들어갔는지 판정)
+        for(tmp in enemyList){
+            val isStrike = tmp.x > dragonX - unitSize/2 &&
+                           tmp.x < dragonX + unitSize/2 &&
+                           tmp.y > dragonY - unitSize/2 &&
+                           tmp.y < dragonY + unitSize/2
+            //드래곤과 적기가 만났다면 Game 종료!
+            if(isStrike){
+                //Handler 객체에 메세지를 제거하는 메소드를 호출해서 Handler를 멈추게 한다.
+                handler2.removeMessages(0)
+                //효과음 재생
+                sManager?.playSound(GameActivity.SOUND_DIE)
+                //GameOver 버튼이 보이도록 한다.
+                overBtn?.isVisible = true
+            }
+        }
+
+
         for(i in missList.indices){
             //i번째 미사일 객체
             val m = missList.get(i)
@@ -234,6 +323,8 @@ class GameView @JvmOverloads constructor(
                     if(e.energy <= 0){
                         //바로 제거 되는 대신 적기가 추락 상태가 되도록 한다.
                         e.isFall = true
+                        //점수 올리기
+                        point += if(e.type == 0) {10} else {20}
                     }
                 }
             }
@@ -352,6 +443,7 @@ class GameView @JvmOverloads constructor(
         //초기화 함수 호출
         init()
     }
+
     //View에 터치 이벤트가 발생하면 호출되는 함수
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when(event?.action){
